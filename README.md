@@ -225,6 +225,267 @@ $filtered = $collection->whereIn('name', [ 'Amet', 'Dolor' ]);
 
 
 
+## Repositories
+
+### 1. `Charcoal\Support\Model\Repository\CollectionLoaderIterator`
+
+Provides improved counting of found rows (via `SQL_CALC_FOUND_ROWS`), supports PHP Generators via "cursor" methods, and supports chaining the loader directly into an iterator construct or appending additional criteria.
+
+
+#### 1.1. Lazy Collections
+
+The `CollectionLoaderIterator` leverages PHP's [generators][php-syntax-generators] to allow you to work with large collections while keeping memory usage low.
+
+When using the traditional `load` methods, all models must be loaded into memory at the same time.
+
+```php
+$repository = (new CollectionLoaderIterator)->setModel(Post::class);
+
+$repository->addFilter('active', true)->addFilter('published <= NOW()');
+
+$posts = $repository->load();
+// query: SELECT …
+// array: Post, Post, Post,…
+
+foreach ($posts as $post) {
+    echo $post['title'];
+}
+```
+
+However, the `cursor` methods return `Generator` objects instead. This allows you to keep one model loaded in memory at a time:
+
+```php
+$repository = (new CollectionLoaderIterator)->setModel(Post::class);
+
+$repository->addFilter('active', true)->addFilter('published <= NOW()');
+
+$posts = $repository->cursor();
+// Generator
+
+foreach ($posts as $post) { // query: SELECT …
+    // Post
+    echo $post['title'];
+}
+```
+
+
+#### 1.2. `IteratorAggregate`
+
+The `CollectionLoaderIterator` implements [`IteratorAggregate`][php-class-iterator-aggregate] which allows the repository to be used in a `foreach` construct without the need to explicitly call a query method.
+
+```php
+class Post extends AbstractModel
+{
+    /**
+     * @return Comment[]|CollectionLoaderIterator
+     */
+    public function getComments() : iterable
+    {
+        $comments = (new CollectionLoaderIterator)->setModel(Comment::class);
+
+        $byPost = [
+            'property' => 'post_id',
+            'value'    => $this['id'],
+        ];
+
+        return $comments->addFilter($byPost);
+    }
+}
+```
+
+Internally, the `IteratorAggregate::getIterator()` method calls the `CollectionLoaderIterator::cursor()` method which in turn returns a [`Generator`][php-class-generator] object.
+
+```php
+$post = $factory->create(Post::class)->load(1);
+
+foreach ($post['comments'] as $comment) { // query: SELECT …
+    // Comment
+}
+```
+
+Furthermore, you can continue to chain constraints onto the repository:
+
+```php
+$post = $factory->create(Post::class)->load(1);
+
+$comments = $post['comments']->addFilter('approved', true);
+// CollectionLoaderIterator
+
+foreach ($comments as $comment) { // query: SELECT …
+    // Comment
+}
+```
+
+
+#### 1.3. `SQL_CALC_FOUND_ROWS`
+
+If the [`SQL_CALC_FOUND_ROWS`][mysql-function-found-rows] option is included in a `SELECT` statement, the `FOUND_ROWS()` function will be invoked afterwards to retrieve the number of objects the statement would have returned without the `LIMIT`.
+
+Using the query builder interface, the generated statement will include `SQL_CALC_FOUND_ROWS` option unless the query is targeting a single object.
+
+```php
+$repository = (new CollectionLoaderIterator)->setModel(Post::class);
+
+$repository->addFilter('active', true)
+           ->addFilter('published <= NOW()')
+           ->setNumPerPage(10)
+           ->setPage(3);
+
+// Automatically find total count from query builder
+$posts = $repository->load();
+// query: SELECT SQL_CALC_FOUND_ROWS * FROM `charcoal_users` WHERE ((`active` = '1') AND (`published` <= NOW())) LIMIT 30, 10;
+// query: SELECT FOUND_ROWS();
+$total = $repository->foundObjs();
+// int: 38
+
+// Automatically find total count from query
+$users = $repository->reset()->loadFromQuery('SELECT SQL_CALC_FOUND_ROWS * … LIMIT 0, 20');
+// query: SELECT SQL_CALC_FOUND_ROWS * … LIMIT 0, 20;
+// query: SELECT FOUND_ROWS();
+$total = $repository->foundObjs();
+// int: 38
+
+// Automatically find total count from query
+$users = $repository->reset()->loadFromQuery('SELECT * … LIMIT 0, 20');
+// query: SELECT * … LIMIT 0, 20;
+$total = $repository->foundObjs();
+// LogicException: Can not count found objects for the last query
+```
+
+### 2. `Charcoal\Support\Model\Repository\ModelCollectionLoader`
+
+Provides support for cloning, preventing model swapping, and sharing the same [data source][charcoal-source-interface].
+
+#### 2.1. Model Protection
+
+Once a model is assigned to the `ModelCollectionLoader`, any attempts to replace it will result in a thrown exception:
+
+```php
+$repository = (new ModelCollectionLoader)->setModel(Post::class);
+
+// …
+
+$repository->setModel(Comment::class);
+// RuntimeException: A model is already assigned to this collection loader: \App\Model\Post
+```
+
+On its own, this feature is not very practical but in concert with the `ScopedCollectionLoader` this becomes an important safety measure.
+
+
+#### 2.2. Collection Loader Cloning
+
+When cloning the `ModelCollectionLoader` via the `clone` keyword or the `cloneWith()` method, the model protection mechanism will be unlocked until a new object type is assigned or until the `source()` method is called.
+
+```php
+$postsLoader    = (new ModelCollectionLoader)->setModel(Post::class);
+$commentsLoader = (clone $postsLoader)->setModel(Comment::class);
+```
+
+```php
+$postsLoader    = (new ModelCollectionLoader)->setModel(Post::class);
+$commentsLoader = $postsLoader->cloneWith(Comment::class);
+$tagsLoader     = $postsLoader->cloneWith([
+    'model'      => Tag::class,
+    'collection' => 'array',
+]);
+```
+
+
+#### 2.3. Source Sharing
+
+A Charcoal Model is based on the ActiveRecord implementation for working with data sources; which is to say a Model allows you to interact with data in your database. This interaction is facilitated by a "Data Source" interface, like the `DatabaseSource` class. Each instance of a Model will usually create its own instance of a Data Source object; in other words, you end up always working with two objects per Model (the Model and the Data Source).
+
+To reduce the number of objects in a request's lifecycle, its a good practice to assign a single instance of a Data Source to all Models. When the `ModelCollectionLoader` creates a new instance of the Model being queried, it will assign the _prototype_ Model's Data Source object (the one that is queried upon by the repository).
+
+```php
+$posts = (new BaseCollectionLoader)->setModel(Post::class)->load();
+// array: Post, Post, Post,…
+
+($posts[0]->source() === $posts[2]->source())
+// bool: false
+
+$posts = (new ModelCollectionLoader)->setModel(Post::class)->load();
+// array: Post, Post, Post,…
+
+($posts[0]->source() === $posts[2]->source())
+// bool: true
+```
+
+
+### 3. `Charcoal\Support\Model\Repository\ScopedCollectionLoader`
+
+Provides support for default filters, orders, and pagination, which are automatically applied upon the loader's creation and after every reset.
+
+```php
+$repository = new ScopedCollectionLoader([
+    'logger'          => $container['logger'],
+    'factory'         => $container['model/factory'],
+    'model'           => Post::class,
+    'default_filters' => [
+        [
+            'property' => 'active',
+            'value'    => true,
+        ],
+        [
+            'property' => 'publish_date',
+            'operator' => 'IS NOT NULL',
+        ],
+    ],
+    'default_orders'  => [
+        [
+            'property'  => 'publish_date',
+            'direction' => 'desc',
+        ],
+    ],
+    'default_pagination' => [
+        'num_per_page' => 20,
+    ],
+]);
+
+$posts = $repository->addFilter('publish_date <= NOW()')->load();
+// query: SELECT SQL_CALC_FOUND_ROWS * FROM `posts` WHERE ((`active` = '1') AND (`publish_date` IS NOT NULL) AND (`published` <= NOW())) ORDER BY `publish_date` DESC LIMIT 20;
+
+$repository->reset()->load();
+// query: SELECT SQL_CALC_FOUND_ROWS * FROM `posts` WHERE ((`active` = '1') AND (`publish_date` IS NOT NULL)) ORDER BY `publish_date` DESC LIMIT 20;
+```
+
+If you would like to disable the default criteria on a repository, you may use the `withoutDefaults` method. The method accepts a callback to interact with collection loader if, for example, you only wish to apply default orders:
+
+```php
+$repository = new ScopedCollectionLoader([…]);
+
+$posts = $repository->withoutDefaults(function () {
+    $this->applyDefaultOrders();
+    $this->applyDefaultPagination();
+})->load();
+// query: SELECT SQL_CALC_FOUND_ROWS * FROM `posts` ORDER BY `publish_date` DESC LIMIT 20;
+```
+
+
+### 4. `Charcoal\Support\Model\Repository\CachedCollectionLoader`
+
+Provides support for storing the data of loaded models in a [cache pool][charcoal-cache], similar to the [`\Charcoal\Model\Service\ModelLoader`][charcoal-model-loader] and using the same cache key for  interoperability.
+
+```php
+$repository = new CachedCollectionLoader([
+    'cache'   => $container['cache'],
+    'logger'  => $container['logger'],
+    'factory' => $container['model/factory'],
+    'model'   => Post::class,
+]);
+```
+
+If you would like to disable the caching process on a repository, you may use the `withoutCache` method. The method accepts a callback to interact with collection loader:
+
+```php
+$repository = new CachedCollectionLoader([…]);
+
+$posts = $repository->withoutCache()->cursor();
+// Generator
+```
+
+
+
 ## License
 
 -   _Charcoal Model Collections and Repositories_ component is licensed under the MIT license. See [LICENSE](LICENSE) for details.
