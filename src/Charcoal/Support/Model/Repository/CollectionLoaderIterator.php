@@ -161,7 +161,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      */
     public function cursorOne($id = null, callable $before = null, callable $after = null)
     {
-        if ($id !== null && (empty($id) || !is_scalar($id))) {
+        if ($id !== null && !$this->isIdValid($id)) {
             throw new InvalidArgumentException('One model ID is required');
         }
 
@@ -210,9 +210,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      */
     public function cursorMany(array $ids, callable $before = null, callable $after = null)
     {
-        $ids = array_values(array_filter($ids, 'strlen'));
-
-        if (empty($ids)) {
+        if (!$this->areIdsValid($ids)) {
             throw new InvalidArgumentException('At least one model ID is required');
         }
 
@@ -540,7 +538,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      */
     public function loadOne($id = null, callable $before = null, callable $after = null)
     {
-        if ($id !== null && (empty($id) || !is_scalar($id))) {
+        if ($id !== null && !$this->isIdValid($id)) {
             throw new InvalidArgumentException('One model ID is required');
         }
 
@@ -589,9 +587,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      */
     public function loadMany(array $ids, callable $before = null, callable $after = null)
     {
-        $ids = array_values(array_filter($ids, 'strlen'));
-
-        if (empty($ids)) {
+        if (!$this->areIdsValid($ids)) {
             throw new InvalidArgumentException('At least one model ID is required');
         }
 
@@ -750,5 +746,43 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
     public function getIterator()
     {
         return $this->cursor();
+    }
+
+    /**
+     * Determine whether a variable is a valid ID (number or string).
+     *
+     * @return boolean
+     */
+    protected function isIdValid($id)
+    {
+        if (is_numeric($id)) {
+            return ((int)$id > 0);
+        }
+
+        if (is_string($id)) {
+            return isset($id[0]);
+        }
+
+        return false;
+    }
+
+    /**
+     * Determine whether a list contains valid IDs (numbers or strings).
+     *
+     * @return boolean
+     */
+    protected function areIdsValid(array $ids)
+    {
+        if (empty($ids)) {
+            return false;
+        }
+
+        foreach ($ids as $id) {
+            if (!$this->isIdValid($id)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

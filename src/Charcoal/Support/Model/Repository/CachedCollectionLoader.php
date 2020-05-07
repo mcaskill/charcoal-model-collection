@@ -99,7 +99,11 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      */
     public function cursorOne($id = null, callable $before = null, callable $after = null)
     {
-        if ($this->useCache && $id !== null) {
+        if ($id !== null && !$this->isIdValid($id)) {
+            throw new InvalidArgumentException('One model ID is required');
+        }
+
+        if ($this->useCache) {
             $model = $this->getModelFromCache($id);
             if ($model !== null) {
                 yield $model;
@@ -122,11 +126,16 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @param  mixed    $id     The model identifier.
      * @param  callable $before Process each entity before applying raw data.
      * @param  callable $after  Process each entity after applying raw data.
+     * @throws InvalidArgumentException If the $id does not resolve to a queryable statement.
      * @return ModelInterface|null
      */
     public function loadOne($id = null, callable $before = null, callable $after = null)
     {
-        if ($this->useCache && $id !== null) {
+        if ($id !== null && !$this->isIdValid($id)) {
+            throw new InvalidArgumentException('One model ID is required');
+        }
+
+        if ($this->useCache) {
             $model = $this->getModelFromCache($id);
             if ($model !== null) {
                 return $model;
@@ -146,10 +155,15 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @param  array    $ids    One or many model identifiers.
      * @param  callable $before Process each entity before applying raw data.
      * @param  callable $after  Process each entity after applying raw data.
+     * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
      * @return ModelInterface[]|ArrayAccess
      */
     public function loadMany(array $ids, callable $before = null, callable $after = null)
     {
+        if (!$this->areIdsValid($ids)) {
+            throw new InvalidArgumentException('At least one model ID is required');
+        }
+
         if ($this->useCache) {
             $models = [];
             foreach ($ids as $id) {
