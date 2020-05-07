@@ -154,22 +154,21 @@ class CachedCollectionLoader extends ScopedCollectionLoader
             $models = [];
             foreach ($ids as $id) {
                 $model = $this->getModelFromCache($id);
-                if ($model !== null) {
-                    $models[$id] = $model;
-                }
+                $models[$id] = $model;
             }
 
-            $ids = array_keys($models, null, true);
-            if (empty($ids)) {
-                return $models;
+            $misses = array_keys($models, null, true);
+            if (empty($misses)) {
+                return $this->createCollectionWith($models);
             }
 
-            $missing = parent::loadMany($ids, $before, $after);
+            $missing = parent::loadMany($misses, $before, $after);
             foreach ($missing as $model) {
                 $models[$model['id']] = $model;
             }
 
-            return $models;
+            $models = array_filter($models, 'is_object');
+            return $this->createCollectionWith($models);
         }
 
         $models = parent::loadMany($ids, $before, $after);
