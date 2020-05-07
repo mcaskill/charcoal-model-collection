@@ -146,7 +146,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @param  array    $ids    One or many model identifiers.
      * @param  callable $before Process each entity before applying raw data.
      * @param  callable $after  Process each entity after applying raw data.
-     * @return ModelInterface[]
+     * @return ModelInterface[]|ArrayAccess
      */
     public function loadMany(array $ids, callable $before = null, callable $after = null)
     {

@@ -7,9 +7,14 @@ use ArrayIterator;
 use IteratorAggregate;
 use LogicException;
 use InvalidArgumentException;
+use RuntimeException;
+
+// From 'illuminate/support'
+use Illuminate\Support\Collection as LaravelCollection;
 
 // From 'charcoal-core'
 use Charcoal\Model\ModelInterface;
+use Charcoal\Model\CollectionInterface;
 use Charcoal\Loader\CollectionLoader as BaseCollectionLoader;
 
 /**
@@ -703,6 +708,35 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         }
 
         return $this->processCollection($sth, $before, $callback);
+    }
+
+    /**
+     * Create a collection from the given value.
+     *
+     * @param  mixed $value The value being converted.
+     * @throws RuntimeException If the collection class is invalid.
+     * @return array|ArrayAccess
+     */
+    public function createCollectionWith($value)
+    {
+        $collectClass = $this->collectionClass();
+        if ($collectClass === 'array') {
+            if (is_array($value)) {
+                return $value;
+            } elseif (class_exists('\Illuminate\Support\Collection') && $value instanceof LaravelCollection) {
+                return $value->all();
+            } elseif ($value instanceof CollectionInterface) {
+                return $value->all();
+            } elseif ($value instanceof Traversable) {
+                return iterator_to_array($value);
+            } elseif ($value instanceof ModelInterface) {
+                return [ $value ];
+            }
+
+            return (array)$value;
+        }
+
+        return new $collectClass($value);
     }
 
     /**
