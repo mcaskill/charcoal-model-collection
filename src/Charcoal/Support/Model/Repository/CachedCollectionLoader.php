@@ -89,7 +89,8 @@ class CachedCollectionLoader extends ScopedCollectionLoader
     // -------------------------------------------------------------------------
 
     /**
-     * Find a model by its primary key and return a generator.
+     * Find a model by its primary key from the cache pool or from the data source
+     * and return a generator.
      *
      * @param  mixed    $id     The model identifier.
      * @param  callable $before Process each entity before applying raw data.
@@ -121,7 +122,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
     // -------------------------------------------------------------------------
 
     /**
-     * Find a model by its primary key.
+     * Find a model by its primary key from the cache pool or from the data source.
      *
      * @param  mixed    $id     The model identifier.
      * @param  callable $before Process each entity before applying raw data.
@@ -150,7 +151,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
     }
 
     /**
-     * Find multiple models by their primary keys.
+     * Find multiple models by their primary keys from the cache pool or from the data source.
      *
      * @param  array    $ids    One or many model identifiers.
      * @param  callable $before Process each entity before applying raw data.
