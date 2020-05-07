@@ -166,24 +166,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
         }
 
         if ($this->useCache) {
-            $models = [];
-            foreach ($ids as $id) {
-                $model = $this->getModelFromCache($id);
-                $models[$id] = $model;
-            }
-
-            $misses = array_keys($models, null, true);
-            if (empty($misses)) {
-                return $this->createCollectionWith($models);
-            }
-
-            $missing = parent::loadMany($misses, $before, $after);
-            foreach ($missing as $model) {
-                $models[$model['id']] = $model;
-            }
-
-            $models = array_filter($models, 'is_object');
-            return $this->createCollectionWith($models);
+            return $this->loadManyFromCache($ids, $before, $after);
         }
 
         $models = parent::loadMany($ids, $before, $after);
@@ -191,6 +174,41 @@ class CachedCollectionLoader extends ScopedCollectionLoader
         $this->useCache = true;
 
         return $models;
+    }
+
+    /**
+     * Find multiple models by their primary keys from the cache pool.
+     *
+     * @param  array    $ids    One or many model identifiers.
+     * @param  callable $before Process each entity before applying raw data.
+     * @param  callable $after  Process each entity after applying raw data.
+     * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
+     * @return ModelInterface[]|ArrayAccess
+     */
+    public function loadManyFromCache(array $ids, callable $before = null, callable $after = null)
+    {
+        if (!$this->areIdsValid($ids)) {
+            throw new InvalidArgumentException('At least one model ID is required');
+        }
+
+        $models = [];
+        foreach ($ids as $id) {
+            $model = $this->getModelFromCache($id);
+            $models[$id] = $model;
+        }
+
+        $misses = array_keys($models, null, true);
+        if (empty($misses)) {
+            return $this->createCollectionWith($models);
+        }
+
+        $missing = parent::loadMany($misses, $before, $after);
+        foreach ($missing as $model) {
+            $models[$model['id']] = $model;
+        }
+
+        $models = array_filter($models, 'is_object');
+        return $this->createCollectionWith($models);
     }
 
     /**
