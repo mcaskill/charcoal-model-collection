@@ -116,6 +116,72 @@ class CachedCollectionLoader extends ScopedCollectionLoader
         $this->useCache = true;
     }
 
+    /**
+     * Find multiple models by their primary keys from the cache pool or from the data source
+     * and return a generator.
+     *
+     * @param  array    $ids    One or many model identifiers.
+     * @param  callable $before Process each entity before applying raw data.
+     * @param  callable $after  Process each entity after applying raw data.
+     * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
+     * @return ModelInterface[]|\Generator
+     */
+    public function cursorMany(array $ids, callable $before = null, callable $after = null)
+    {
+        if (!$this->areIdsValid($ids)) {
+            throw new InvalidArgumentException('At least one model ID is required');
+        }
+
+        if ($this->useCache) {
+            yield from $this->cursorManyFromCache($ids, $before, $after);
+            return;
+        }
+
+        yield from parent::cursorMany($ids, $before, $after);
+
+        $this->useCache = true;
+    }
+
+    /**
+     * Find multiple models by their primary keys from the cache pool
+     * and return a generator.
+     *
+     * @param  array    $ids    One or many model identifiers.
+     * @param  callable $before Process each entity before applying raw data.
+     * @param  callable $after  Process each entity after applying raw data.
+     * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
+     * @return ModelInterface[]|\Generator
+     */
+    public function cursorManyFromCache(array $ids, callable $before = null, callable $after = null)
+    {
+        if (!$this->areIdsValid($ids)) {
+            throw new InvalidArgumentException('At least one model ID is required');
+        }
+
+        $hitsById = [];
+        foreach ($ids as $id) {
+            $hitsById[$id] = $this->hasModelInCache($id);
+        }
+
+        $misses = array_keys($hitsById, false, true);
+        if (empty($misses)) {
+            foreach ($ids as $id) {
+                yield $this->getModelFromCache($id);
+            }
+            return;
+        }
+
+        $missing = parent::cursorMany($misses, $before, $after);
+        foreach ($hitsById as $id => $hit) {
+            if ($hit) {
+                yield $this->getModelFromCache($id);
+            } elseif ($missing->valid()) {
+                yield $missing->current();
+                $missing->next();
+            }
+        }
+    }
+
 
 
     // Query
