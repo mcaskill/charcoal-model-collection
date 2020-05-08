@@ -42,6 +42,11 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
     protected $fromQueryBuilder;
 
     /**
+     * @var array
+     */
+    protected $querySnapshot;
+
+    /**
      * Reset everything but the model.
      *
      * @return self
@@ -169,6 +174,8 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $model  = $this->model();
 
         if ($id !== null) {
+            $this->snapshotQueryState();
+
             $this->addFilter([
                 'property' => $model->key(),
                 'operator' => '=',
@@ -179,6 +186,10 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $selects = $source->sqlSelect();
         $tables  = $source->sqlFrom();
         $filters = $source->sqlFilters();
+
+        if ($id !== null) {
+            $this->restoreQueryState();
+        }
 
         $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . ' LIMIT 1';
 
@@ -218,21 +229,27 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $model  = $this->model();
         $key    = $model->key();
 
+        $this->snapshotQueryState();
+
         $this->addFilter([
             'property' => $key,
             'operator' => 'IN',
             'values'   => $ids,
         ]);
 
-        $this->addOrder([
-            'property' => $key,
-            'values'   => $ids,
+        $this->source()->setOrders([
+            [
+                'property' => $key,
+                'values'   => $ids,
+            ]
         ]);
 
         $selects = $source->sqlSelect();
         $tables  = $source->sqlFrom();
         $filters = $source->sqlFilters();
         $orders  = $source->sqlOrders();
+
+        $this->restoreQueryState();
 
         $this->fromQueryBuilder = true;
 
@@ -546,6 +563,8 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $model  = $this->model();
 
         if ($id !== null) {
+            $this->snapshotQueryState();
+
             $this->addFilter([
                 'property' => $model->key(),
                 'operator' => '=',
@@ -556,6 +575,10 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $selects = $source->sqlSelect();
         $tables  = $source->sqlFrom();
         $filters = $source->sqlFilters();
+
+        if ($id !== null) {
+            $this->restoreQueryState();
+        }
 
         $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . ' LIMIT 1';
 
@@ -595,21 +618,27 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $model  = $this->model();
         $key    = $model->key();
 
+        $this->snapshotQueryState();
+
         $this->addFilter([
             'property' => $key,
             'operator' => 'IN',
             'values'   => $ids,
         ]);
 
-        $this->addOrder([
-            'property' => $key,
-            'values'   => $ids,
+        $this->source()->setOrders([
+            [
+                'property' => $key,
+                'values'   => $ids,
+            ]
         ]);
 
         $selects = $source->sqlSelect();
         $tables  = $source->sqlFrom();
         $filters = $source->sqlFilters();
         $orders  = $source->sqlOrders();
+
+        $this->restoreQueryState();
 
         $this->fromQueryBuilder = true;
 
@@ -746,6 +775,45 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
     public function getIterator()
     {
         return $this->cursor();
+    }
+
+    /**
+     * Take a snapshot of the source's current query state.
+     *
+     * @return void
+     */
+    protected function snapshotQueryState()
+    {
+        $source = $this->source();
+
+        $this->querySnapshot = [
+            'filters' => $source->filters(),
+            'orders'  => $source->orders(),
+        ];
+    }
+
+    /**
+     * Restore the last query state on the source.
+     *
+     * @return void
+     */
+    protected function restoreQueryState()
+    {
+        if ($this->querySnapshot === null) {
+            return;
+        }
+
+        $source = $this->source();
+
+        if (isset($this->querySnapshot['filters'])) {
+            $source->setFilters($this->querySnapshot['filters']);
+        }
+
+        if (isset($this->querySnapshot['orders'])) {
+            $source->setOrders($this->querySnapshot['orders']);
+        }
+
+        $this->querySnapshot = null;
     }
 
     /**
