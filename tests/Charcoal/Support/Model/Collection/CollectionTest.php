@@ -5,6 +5,7 @@ namespace Charcoal\Tests\Support\Model\Collection;
 use ArrayIterator;
 use ArrayObject;
 use CachingIterator;
+use InvalidArgumentException;
 use ReflectionClass;
 
 // From PSR-3
@@ -156,11 +157,10 @@ class CollectionTest extends AbstractTestCase
         $this->assertEquals($this->map, $c->all());
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testSortByThrowsAnException()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $arr = $this->arr;
         shuffle($arr);
 
@@ -211,11 +211,10 @@ class CollectionTest extends AbstractTestCase
         $this->assertCount(3, $random);
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testRandomOnEmptyCollection()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         (new Collection)->random();
     }
 
@@ -246,11 +245,10 @@ class CollectionTest extends AbstractTestCase
         $this->assertEquals($expected, $c->prepend($o5)->all());
     }
 
-    /**
-     * @expectedException InvalidArgumentException
-     */
     public function testPrependUnacceptableData()
     {
+        $this->expectException(InvalidArgumentException::class);
+
         $c = new Collection($this->arr);
         $c->prepend('foo');
     }
