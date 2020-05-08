@@ -7,9 +7,8 @@ use ArrayObject;
 use CachingIterator;
 use ReflectionClass;
 
-// From 'mockery/mockery'
-use Mockery as m;
-use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
+// From PSR-3
+use Psr\Log\NullLogger;
 
 // From 'charcoal-core'
 use Charcoal\Model\Model;
@@ -26,8 +25,6 @@ use Charcoal\Tests\AbstractTestCase;
  */
 class CollectionTest extends AbstractTestCase
 {
-    use MockeryPHPUnitIntegration;
-
     const OBJ_1 = '40ea';
     const OBJ_2 = '69c6';
     const OBJ_3 = '71b5';
@@ -46,20 +43,54 @@ class CollectionTest extends AbstractTestCase
 
     public function setUp()
     {
-        $this->map = [
-            self::OBJ_1 => m::mock(Model::class, [ 'id' => self::OBJ_1 ]),
-            self::OBJ_2 => m::mock(Model::class, [ 'id' => self::OBJ_2 ]),
-            self::OBJ_3 => m::mock(Model::class, [ 'id' => self::OBJ_3 ]),
-            self::OBJ_4 => m::mock(Model::class, [ 'id' => self::OBJ_4 ]),
-            self::OBJ_5 => m::mock(Model::class, [ 'id' => self::OBJ_5 ]),
-        ];
+        $proto = new Model([
+            'logger'   => new NullLogger(),
+            'metadata' => [
+                'id' => [
+                    'type' => 'id',
+                ],
+                'name' => [
+                    'type' => 'string',
+                ],
+                'position' => [
+                    'type' => 'number',
+                ],
+            ],
+        ]);
 
-        $i = 1;
-        foreach ($this->map as &$mock) {
-            $mock->shouldReceive('offsetGet')
-                 ->with('position')
-                 ->andReturn($i++);
-        }
+        $o1 = (clone $proto)->setData([
+            'id'       => self::OBJ_1,
+            'name'     => 'Foo',
+            'position' => 1,
+        ]);
+        $o2 = (clone $proto)->setData([
+            'id'       => self::OBJ_2,
+            'name'     => 'Bar',
+            'position' => 2,
+        ]);
+        $o3 = (clone $proto)->setData([
+            'id'       => self::OBJ_3,
+            'name'     => 'Baz',
+            'position' => 3,
+        ]);
+        $o4 = (clone $proto)->setData([
+            'id'       => self::OBJ_4,
+            'name'     => 'Qux',
+            'position' => 4,
+        ]);
+        $o5 = (clone $proto)->setData([
+            'id'       => self::OBJ_5,
+            'name'     => 'Xyz',
+            'position' => 5,
+        ]);
+
+        $this->map = [
+            self::OBJ_1 => $o1,
+            self::OBJ_2 => $o2,
+            self::OBJ_3 => $o3,
+            self::OBJ_4 => $o4,
+            self::OBJ_5 => $o5,
+        ];
 
         $this->arr = array_values($this->map);
     }
