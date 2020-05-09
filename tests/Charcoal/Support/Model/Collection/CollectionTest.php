@@ -77,12 +77,12 @@ class CollectionTest extends AbstractTestCase
         $o4 = (clone $proto)->setData([
             'id'       => self::OBJ_4,
             'name'     => 'Qux',
-            'position' => 4,
+            'position' => '3',
         ]);
         $o5 = (clone $proto)->setData([
             'id'       => self::OBJ_5,
             'name'     => 'Xyz',
-            'position' => 5,
+            'position' => 4,
         ]);
 
         $this->map = [
@@ -177,6 +177,103 @@ class CollectionTest extends AbstractTestCase
         $c = $c->reverse();
 
         $this->assertSame($map, $c->all());
+    }
+
+    public function testFilter()
+    {
+        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        $c = new Collection($this->arr);
+
+        $filtered = $c->filter(function ($obj) {
+            return $obj['id'] === self::OBJ_2;
+        });
+        $this->assertEquals(
+            [ self::OBJ_2 => $o2 ],
+            $filtered->all()
+        );
+
+        $filtered = $c->filter(function ($obj, $key) {
+            return strpos($key, 'e') !== false;
+        });
+        $this->assertEquals(
+            [ self::OBJ_1 => $o1, self::OBJ_4 => $o4, self::OBJ_5 => $o5 ],
+            $filtered->all()
+        );
+    }
+
+    public function testWhere()
+    {
+        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        $c = new Collection($this->arr);
+
+        $this->assertEquals(
+            [ self::OBJ_3 => $o3, self::OBJ_4 => $o4 ],
+            $c->where('position', 3)->all()
+        );
+        $this->assertEquals(
+            [ self::OBJ_3 => $o3, self::OBJ_4 => $o4 ],
+            $c->where('position', '=', 3)->all()
+        );
+        $this->assertEquals(
+            [ self::OBJ_3 => $o3, self::OBJ_4 => $o4 ],
+            $c->where('position', '==', 3)->all()
+        );
+        $this->assertEquals(
+            [ self::OBJ_3 => $o3, self::OBJ_4 => $o4 ],
+            $c->where('position', 'garbage', 3)->all()
+        );
+        $this->assertEquals(
+            [ self::OBJ_3 => $o3 ],
+            $c->where('position', '===', 3)->all()
+        );
+
+        $this->assertEquals(
+            [ self::OBJ_1 => $o1, self::OBJ_2 => $o2, self::OBJ_5 => $o5 ],
+            $c->where('position', '<>', 3)->all()
+        );
+        $this->assertEquals(
+            [ self::OBJ_1 => $o1, self::OBJ_2 => $o2, self::OBJ_5 => $o5 ],
+            $c->where('position', '!=', 3)->all()
+        );
+        $this->assertEquals(
+            [ self::OBJ_1 => $o1, self::OBJ_2 => $o2, self::OBJ_4 => $o4, self::OBJ_5 => $o5 ],
+            $c->where('position', '!==', 3)->all()
+        );
+
+        $this->assertEquals(
+            [ self::OBJ_1 => $o1, self::OBJ_2 => $o2, self::OBJ_3 => $o3, self::OBJ_4 => $o4 ],
+            $c->where('position', '<=', 3)->all()
+        );
+        $this->assertEquals(
+            [ self::OBJ_3 => $o3, self::OBJ_4 => $o4, self::OBJ_5 => $o5 ],
+            $c->where('position', '>=', 3)->all()
+        );
+        $this->assertEquals(
+            [ self::OBJ_1 => $o1, self::OBJ_2 => $o2 ],
+            $c->where('position', '<', 3)->all()
+        );
+        $this->assertEquals(
+            [ self::OBJ_5 => $o5 ],
+            $c->where('position', '>', 3)->all()
+        );
+    }
+
+    public function testWhereIn()
+    {
+        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        $c = new Collection($this->arr);
+
+        $filtered = $c->whereIn('position', [ 1, 3 ])->all();
+        $this->assertEquals(
+            [ self::OBJ_1 => $o1, self::OBJ_3 => $o3, self::OBJ_4 => $o4 ],
+            $filtered
+        );
+
+        $filtered = $c->whereIn('position', [ 1, 3 ], true)->all();
+        $this->assertEquals(
+            [ self::OBJ_1 => $o1, self::OBJ_3 => $o3 ],
+            $filtered
+        );
     }
 
     public function testTakeFirst()
