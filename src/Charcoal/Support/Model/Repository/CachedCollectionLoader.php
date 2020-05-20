@@ -104,7 +104,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
             throw new InvalidArgumentException('One model ID is required');
         }
 
-        if ($this->useCache) {
+        if ($this->useCache && $id !== null) {
             $model = $this->getModelFromCache($id);
             if ($model !== null) {
                 yield $model;
@@ -202,7 +202,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
             throw new InvalidArgumentException('One model ID is required');
         }
 
-        if ($this->useCache) {
+        if ($this->useCache && $id !== null) {
             $model = $this->getModelFromCache($id);
             if ($model !== null) {
                 return $model;
