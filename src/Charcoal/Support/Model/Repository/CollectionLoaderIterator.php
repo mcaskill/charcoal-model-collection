@@ -98,16 +98,19 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      */
     public function loadFound($withFoundRows = false)
     {
-        if ($this->fromQueryBuilder === false) {
+        $src = $this->source();
+
+        if ($withFoundRows) {
+            $sql = 'SELECT FOUND_ROWS()';
+        } elseif ($this->fromQueryBuilder) {
+            $sql = $src->sqlLoadCount();
+        } else {
             throw new LogicException('Can not count found objects for the last query');
         }
 
-        $src = $this->source();
-        $dbh = $src->db();
-
-        $sql = $withFoundRows ? 'SELECT FOUND_ROWS()' : $src->sqlLoadCount();
         $this->logger->debug($sql);
 
+        $dbh = $src->db();
         $sth = $dbh->prepare($sql);
         $sth->execute();
 
