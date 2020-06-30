@@ -76,16 +76,6 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
     }
 
     /**
-     * Alias of {@see self::foundObjs()}.
-     *
-     * @return integer
-     */
-    public function loadCount()
-    {
-        return $this->foundObjs();
-    }
-
-    /**
      * Get the total number of items for this collection query.
      *
      * @overrides \Charcoal\Loader\CollectionLoader::loadCount()
