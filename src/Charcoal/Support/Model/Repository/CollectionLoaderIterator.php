@@ -179,12 +179,13 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $selects = $source->sqlSelect();
         $tables  = $source->sqlFrom();
         $filters = $source->sqlFilters();
+        $orders  = $source->sqlOrders();
 
         if ($id !== null) {
             $this->restoreQueryState();
         }
 
-        $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . ' LIMIT 1';
+        $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . $orders . ' LIMIT 1';
 
         $this->logger->debug($sql);
         $dbh = $source->db();
@@ -568,12 +569,13 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $selects = $source->sqlSelect();
         $tables  = $source->sqlFrom();
         $filters = $source->sqlFilters();
+        $orders  = $source->sqlOrders();
 
         if ($id !== null) {
             $this->restoreQueryState();
         }
 
-        $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . ' LIMIT 1';
+        $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . $orders . ' LIMIT 1';
 
         $this->logger->debug($sql);
         $dbh = $source->db();
