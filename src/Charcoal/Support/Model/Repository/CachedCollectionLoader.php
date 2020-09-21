@@ -265,6 +265,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
 
         $misses = array_keys($models, null, true);
         if (empty($misses)) {
+            $models = array_values($models);
             return $this->createCollectionWith($models);
         }
 
@@ -274,6 +275,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
         }
 
         $models = array_filter($models, 'is_object');
+        $models = array_values($models);
         return $this->createCollectionWith($models);
     }
 
