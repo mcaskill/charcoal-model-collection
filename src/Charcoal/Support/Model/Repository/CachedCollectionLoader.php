@@ -71,7 +71,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @param  callable|null $callback A callback bound to the collection loader.
      * @return self
      */
-    public function withoutCache(callable $callback = null)
+    public function withoutCache(?callable $callback = null)
     {
         $this->useCache = false;
 
@@ -98,7 +98,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @throws InvalidArgumentException If the $id does not resolve to a queryable statement.
      * @return ModelInterface|\Generator
      */
-    public function cursorOne($id = null, callable $before = null, callable $after = null)
+    public function cursorOne($id = null, ?callable $before = null, ?callable $after = null)
     {
         if ($id !== null && !$this->isIdValid($id)) {
             throw new InvalidArgumentException('One model ID is required');
@@ -126,7 +126,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
      * @return ModelInterface[]|\Generator
      */
-    public function cursorMany(array $ids, callable $before = null, callable $after = null)
+    public function cursorMany(array $ids, ?callable $before = null, ?callable $after = null)
     {
         if (!$this->areIdsValid($ids)) {
             throw new InvalidArgumentException('At least one model ID is required');
@@ -152,7 +152,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
      * @return ModelInterface[]|\Generator
      */
-    public function cursorManyFromCache(array $ids, callable $before = null, callable $after = null)
+    public function cursorManyFromCache(array $ids, ?callable $before = null, ?callable $after = null)
     {
         if (!$this->areIdsValid($ids)) {
             throw new InvalidArgumentException('At least one model ID is required');
@@ -196,7 +196,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @throws InvalidArgumentException If the $id does not resolve to a queryable statement.
      * @return ModelInterface|null
      */
-    public function loadOne($id = null, callable $before = null, callable $after = null)
+    public function loadOne($id = null, ?callable $before = null, ?callable $after = null)
     {
         if ($id !== null && !$this->isIdValid($id)) {
             throw new InvalidArgumentException('One model ID is required');
@@ -225,7 +225,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
      * @return ModelInterface[]|ArrayAccess
      */
-    public function loadMany(array $ids, callable $before = null, callable $after = null)
+    public function loadMany(array $ids, ?callable $before = null, ?callable $after = null)
     {
         if (!$this->areIdsValid($ids)) {
             throw new InvalidArgumentException('At least one model ID is required');
@@ -251,7 +251,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
      * @return ModelInterface[]|ArrayAccess
      */
-    public function loadManyFromCache(array $ids, callable $before = null, callable $after = null)
+    public function loadManyFromCache(array $ids, ?callable $before = null, ?callable $after = null)
     {
         if (!$this->areIdsValid($ids)) {
             throw new InvalidArgumentException('At least one model ID is required');
@@ -289,7 +289,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @param  callable|null $after   Process each entity after applying raw data.
      * @return ModelInterface|null
      */
-    protected function processModel($objData, callable $before = null, callable $after = null)
+    protected function processModel($objData, ?callable $before = null, ?callable $after = null)
     {
         $obj = parent::processModel($objData, $before, $after);
 
