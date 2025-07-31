@@ -106,7 +106,7 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * @param  callable|null $callback A callback bound to the collection loader.
      * @return self
      */
-    public function withoutDefaults(callable $callback = null)
+    public function withoutDefaults(?callable $callback = null)
     {
         parent::reset(true);
 

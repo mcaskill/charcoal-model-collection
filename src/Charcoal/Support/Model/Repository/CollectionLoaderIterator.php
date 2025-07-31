@@ -16,6 +16,7 @@ use Illuminate\Support\Collection as LaravelCollection;
 use Charcoal\Model\ModelInterface;
 use Charcoal\Model\CollectionInterface;
 use Charcoal\Loader\CollectionLoader as BaseCollectionLoader;
+use Traversable;
 
 /**
  * Iterable Object Collection Loader
@@ -119,8 +120,8 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      */
     public function cursor(
         $ident = null,
-        callable $after = null,
-        callable $before = null,
+        ?callable $after = null,
+        ?callable $before = null,
         &$foundObjs = null
     ) {
         if ($ident !== null) {
@@ -157,7 +158,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      * @throws InvalidArgumentException If the $id does not resolve to a queryable statement.
      * @return ModelInterface|\Generator
      */
-    public function cursorOne($id = null, callable $before = null, callable $after = null)
+    public function cursorOne($id = null, ?callable $before = null, ?callable $after = null)
     {
         if ($id !== null && !$this->isIdValid($id)) {
             throw new InvalidArgumentException('One model ID is required');
@@ -213,7 +214,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
      * @return ModelInterface[]|\Generator
      */
-    public function cursorMany(array $ids, callable $before = null, callable $after = null)
+    public function cursorMany(array $ids, ?callable $before = null, ?callable $after = null)
     {
         if (!$this->areIdsValid($ids)) {
             throw new InvalidArgumentException('At least one model ID is required');
@@ -260,7 +261,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      * @param  callable $after  Process each entity after applying raw data.
      * @return ModelInterface[]|\Generator
      */
-    public function cursorAll(callable $before = null, callable $after = null)
+    public function cursorAll(?callable $before = null, ?callable $after = null)
     {
         $source  = $this->source();
         $selects = $source->sqlSelect();
@@ -290,8 +291,8 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      */
     public function cursorFromQuery(
         $query,
-        callable $callback = null,
-        callable $before = null,
+        ?callable $callback = null,
+        ?callable $before = null,
         &$foundObjs = null
     ) {
         $source = $this->source();
@@ -345,7 +346,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      * @param  callable|null       $after   Process each entity after applying raw data.
      * @return ModelInterface[]|\Generator
      */
-    protected function processCursor($results, callable $before = null, callable $after = null)
+    protected function processCursor($results, ?callable $before = null, ?callable $after = null)
     {
         foreach ($results as $objData) {
             $obj = $this->processModel($objData, $before, $after);
@@ -367,8 +368,8 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      */
     public function findBy(
         array $filters = [],
-        callable $callback = null,
-        callable $before = null,
+        ?callable $callback = null,
+        ?callable $before = null,
         &$foundObjs = null
     ) {
         $this->addFilters($filters);
@@ -392,9 +393,9 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         ModelInterface $model,
         string $direction,
         string $sortKey = 'position',
-        string $groupKey = null,
-        callable $before = null,
-        callable $after = null
+        ?string $groupKey = null,
+        ?callable $before = null,
+        ?callable $after = null
     ) {
         if (!$sortKey || !$model->hasProperty($sortKey)) {
             throw new InvalidArgumentException('Model must have a sorting property');
@@ -509,8 +510,8 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      */
     public function load(
         $ident = null,
-        callable $callback = null,
-        callable $before = null,
+        ?callable $callback = null,
+        ?callable $before = null,
         &$foundObjs = null
     ) {
         if ($ident !== null) {
@@ -547,7 +548,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      * @throws InvalidArgumentException If the $id does not resolve to a queryable statement.
      * @return ModelInterface|null
      */
-    public function loadOne($id = null, callable $before = null, callable $after = null)
+    public function loadOne($id = null, ?callable $before = null, ?callable $after = null)
     {
         if ($id !== null && !$this->isIdValid($id)) {
             throw new InvalidArgumentException('One model ID is required');
@@ -603,7 +604,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
      * @return ModelInterface[]
      */
-    public function loadMany(array $ids, callable $before = null, callable $after = null)
+    public function loadMany(array $ids, ?callable $before = null, ?callable $after = null)
     {
         if (!$this->areIdsValid($ids)) {
             throw new InvalidArgumentException('At least one model ID is required');
@@ -650,7 +651,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      * @param  callable $after  Process each entity after applying raw data.
      * @return ModelInterface[]
      */
-    public function loadAll(callable $before = null, callable $after = null)
+    public function loadAll(?callable $before = null, ?callable $after = null)
     {
         $source  = $this->source();
         $selects = $source->sqlSelect();
@@ -683,8 +684,8 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      */
     public function loadFromQuery(
         $query,
-        callable $callback = null,
-        callable $before = null,
+        ?callable $callback = null,
+        ?callable $before = null,
         &$foundObjs = null
     ) {
         $source = $this->source();
@@ -767,7 +768,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      *
      * @return \Generator
      */
-    public function getIterator()
+    public function getIterator(): Traversable
     {
         return $this->cursor();
     }
