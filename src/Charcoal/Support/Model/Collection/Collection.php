@@ -26,7 +26,7 @@ class Collection extends CharcoalCollection
      *
      * @return object|null Returns the shifted object, or NULL if the collection is empty.
      */
-    public function shift()
+    public function shift(): ?object
     {
         return array_shift($this->objects);
     }
@@ -36,7 +36,7 @@ class Collection extends CharcoalCollection
      *
      * @return object|null Returns the popped object, or NULL if the collection is empty.
      */
-    public function pop()
+    public function pop(): ?object
     {
         return array_pop($this->objects);
     }
@@ -46,14 +46,13 @@ class Collection extends CharcoalCollection
      *
      * @param  object $obj An acceptable object.
      * @throws InvalidArgumentException If the given value is not acceptable.
-     * @return self
      */
-    public function prepend($obj)
+    public function prepend($obj): static
     {
         if (!$this->isAcceptable($obj)) {
             throw new InvalidArgumentException(sprintf(
                 'Must be a model, received %s',
-                (is_object($obj) ? get_class($obj) : gettype($obj))
+                (get_debug_type($obj))
             ));
         }
 
@@ -65,10 +64,8 @@ class Collection extends CharcoalCollection
 
     /**
      * Reverse the order of objects in the collection.
-     *
-     * @return static
      */
-    public function reverse()
+    public function reverse(): static
     {
         return new static(array_reverse($this->objects, true));
     }
@@ -81,9 +78,8 @@ class Collection extends CharcoalCollection
      * result collection.
      *
      * @param  callable $callback The callback routine to use.
-     * @return static
      */
-    public function filter(callable $callback)
+    public function filter(callable $callback): static
     {
         return new static(array_filter($this->objects, $callback, ARRAY_FILTER_USE_BOTH));
     }
@@ -94,9 +90,8 @@ class Collection extends CharcoalCollection
      * @param  string $key      The property to filter by.
      * @param  mixed  $operator The comparison operator.
      * @param  mixed  $value    The value to filter by.
-     * @return static
      */
-    public function where($key, $operator, $value = null)
+    public function where($key, $operator, $value = null): static
     {
         if (func_num_args() === 2) {
             $value    = $operator;
@@ -116,7 +111,7 @@ class Collection extends CharcoalCollection
      */
     protected function operatorForWhere($key, $operator, $value)
     {
-        return function ($obj) use ($key, $operator, $value) {
+        return function (array $obj) use ($key, $operator, $value) {
             $retrieved = $obj[$key];
 
             switch ($operator) {
@@ -150,24 +145,20 @@ class Collection extends CharcoalCollection
      * @param  mixed   $values The values to filter by.
      * @param  boolean $strict Whether to use strict comparisons (TRUE)
      *   or "loose" comparisons (FALSE).
-     * @return static
      */
-    public function whereIn($key, $values, $strict = false)
+    public function whereIn($key, $values, $strict = false): static
     {
         $values = $this->asArray($values);
 
-        return $this->filter(function ($obj) use ($key, $values, $strict) {
-            return in_array($obj[$key], $values, $strict);
-        });
+        return $this->filter(fn($obj): bool => in_array($obj[$key], $values, $strict));
     }
 
     /**
      * Extract the objects with the specified keys.
      *
      * @param  mixed $keys One or more object primary keys.
-     * @return static
      */
-    public function only($keys)
+    public function only($keys): static
     {
         if ($keys === null) {
             return new static($this->objects);
@@ -183,9 +174,8 @@ class Collection extends CharcoalCollection
      *
      * @param  integer $offset See {@see array_slice()} for a description of $offset.
      * @param  integer $length See {@see array_slice()} for a description of $length.
-     * @return static
      */
-    public function slice($offset, $length = null)
+    public function slice($offset, $length = null): static
     {
         return new static(array_slice($this->objects, $offset, $length, true));
     }
@@ -194,9 +184,8 @@ class Collection extends CharcoalCollection
      * Extract a portion of the first or last objects from the collection.
      *
      * @param  integer $limit The number of objects to extract.
-     * @return static
      */
-    public function take($limit)
+    public function take($limit): static
     {
         if ($limit < 0) {
             return $this->slice($limit, abs($limit));
@@ -210,9 +199,8 @@ class Collection extends CharcoalCollection
      *
      * @param  integer $page    The page offset.
      * @param  integer $perPage The number of objects per page.
-     * @return static
      */
-    public function forPage($page, $perPage)
+    public function forPage($page, $perPage): static
     {
         return $this->slice((($page - 1) * $perPage), $perPage);
     }
@@ -231,22 +219,19 @@ class Collection extends CharcoalCollection
      * @param  integer         $options    See {@see sort()} for a description of $sort_flags.
      * @param  boolean         $descending If TRUE, the collection is sorted in reverse order.
      * @throws InvalidArgumentException If the comparator is not a string or callback.
-     * @return self
      */
-    public function sortBy($sortBy, $options = SORT_REGULAR, $descending = false)
+    public function sortBy($sortBy, $options = SORT_REGULAR, $descending = false): static
     {
         $results = [];
 
         if (is_string($sortBy)) {
-            $callback = function ($obj) use ($sortBy) {
-                return $obj[$sortBy];
-            };
+            $callback = (fn($obj) => $obj[$sortBy]);
         } elseif (is_callable($sortBy)) {
             $callback = $sortBy;
         } else {
             throw new InvalidArgumentException(sprintf(
                 'The comparator must be a property key or a function, received %s',
-                (is_object($sortBy) ? get_class($sortBy) : gettype($sortBy))
+                (get_debug_type($sortBy))
             ));
         }
 
@@ -280,9 +265,8 @@ class Collection extends CharcoalCollection
      *
      * @param  callable|string $sortBy  Sort by a property or a callback.
      * @param  integer         $options See {@see sort()} for a description of $sort_flags.
-     * @return self
      */
-    public function sortByDesc($sortBy, $options = SORT_REGULAR)
+    public function sortByDesc($sortBy, $options = SORT_REGULAR): static
     {
         return $this->sortBy($sortBy, $options, true);
     }
@@ -323,6 +307,7 @@ class Collection extends CharcoalCollection
      * @param  mixed $value The value being converted.
      * @return array
      */
+    #[\Override]
     protected function asArray($value)
     {
         if (class_exists('\Illuminate\Support\Collection') && $value instanceof LaravelCollection) {

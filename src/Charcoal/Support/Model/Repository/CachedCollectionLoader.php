@@ -29,10 +29,8 @@ class CachedCollectionLoader extends ScopedCollectionLoader
 
     /**
      * Track whether collection loader should use the cache.
-     *
-     * @var boolean
      */
-    private $useCache = true;
+    private bool $useCache = true;
 
     /**
      * Return a new CollectionLoader object.
@@ -50,9 +48,9 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * Clone the collection loader.
      *
      * @param  mixed $data An array of customizations for the clone or an object model.
-     * @return static
      */
-    public function cloneWith($data)
+    #[\Override]
+    public function cloneWith($data): static
     {
         if (!is_array($data)) {
             $data = [
@@ -69,14 +67,13 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * Disable the cache for the duration of the query.
      *
      * @param  callable|null $callback A callback bound to the collection loader.
-     * @return self
      */
-    public function withoutCache(?callable $callback = null)
+    public function withoutCache(?callable $callback = null): static
     {
         $this->useCache = false;
 
         if ($callback !== null) {
-            $callback = Closure::bind($callback, $this, get_class($this));
+            $callback = Closure::bind($callback, $this, static::class);
             $callback();
         }
 
@@ -98,6 +95,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @throws InvalidArgumentException If the $id does not resolve to a queryable statement.
      * @return ModelInterface|\Generator
      */
+    #[\Override]
     public function cursorOne($id = null, ?callable $before = null, ?callable $after = null)
     {
         if ($id !== null && !$this->isIdValid($id)) {
@@ -126,6 +124,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
      * @return ModelInterface[]|\Generator
      */
+    #[\Override]
     public function cursorMany(array $ids, ?callable $before = null, ?callable $after = null)
     {
         if (!$this->areIdsValid($ids)) {
@@ -164,7 +163,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
         }
 
         $misses = array_keys($hitsById, false, true);
-        if (empty($misses)) {
+        if ($misses === []) {
             foreach ($ids as $id) {
                 yield $this->getModelFromCache($id);
             }
@@ -196,6 +195,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @throws InvalidArgumentException If the $id does not resolve to a queryable statement.
      * @return ModelInterface|null
      */
+    #[\Override]
     public function loadOne($id = null, ?callable $before = null, ?callable $after = null)
     {
         if ($id !== null && !$this->isIdValid($id)) {
@@ -225,6 +225,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
      * @return ModelInterface[]|ArrayAccess
      */
+    #[\Override]
     public function loadMany(array $ids, ?callable $before = null, ?callable $after = null)
     {
         if (!$this->areIdsValid($ids)) {
@@ -264,7 +265,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
         }
 
         $misses = array_keys($models, null, true);
-        if (empty($misses)) {
+        if ($misses === []) {
             $models = array_values($models);
             return $this->createCollectionWith($models);
         }
@@ -274,7 +275,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
             $models[$model['id']] = $model;
         }
 
-        $models = array_filter($models, 'is_object');
+        $models = array_filter($models, is_object(...));
         $models = array_values($models);
         return $this->createCollectionWith($models);
     }
@@ -289,6 +290,7 @@ class CachedCollectionLoader extends ScopedCollectionLoader
      * @param  callable|null $after   Process each entity after applying raw data.
      * @return ModelInterface|null
      */
+    #[\Override]
     protected function processModel($objData, ?callable $before = null, ?callable $after = null)
     {
         $obj = parent::processModel($objData, $before, $after);

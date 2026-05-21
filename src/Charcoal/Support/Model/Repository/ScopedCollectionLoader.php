@@ -70,9 +70,9 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * Clone the collection loader.
      *
      * @param  mixed $data An array of customizations for the clone or an object model.
-     * @return static
      */
-    public function cloneWith($data)
+    #[\Override]
+    public function cloneWith($data): static
     {
         if (!is_array($data)) {
             $data = [
@@ -89,10 +89,9 @@ class ScopedCollectionLoader extends ModelCollectionLoader
 
     /**
      * Reset everything but the model and apply the default filters, orders, and pagination.
-     *
-     * @return self
      */
-    public function reset()
+    #[\Override]
+    public function reset(): static
     {
         parent::reset();
         $this->applyDefaults();
@@ -104,14 +103,13 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * Reset everything but the model and call the given function.
      *
      * @param  callable|null $callback A callback bound to the collection loader.
-     * @return self
      */
-    public function withoutDefaults(?callable $callback = null)
+    public function withoutDefaults(?callable $callback = null): static
     {
         parent::reset(true);
 
         if ($callback !== null) {
-            $callback = Closure::bind($callback, $this, get_class($this));
+            $callback = Closure::bind($callback, $this, static::class);
             $callback();
         }
 
@@ -148,9 +146,8 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * Note: Any existing filters are dropped.
      *
      * @param  mixed[] $filters One or more filters to set on this expression.
-     * @return self
      */
-    protected function setDefaultFilters(array $filters)
+    protected function setDefaultFilters(array $filters): static
     {
         $this->defaultFilters = [];
         $this->addDefaultFilters($filters);
@@ -161,11 +158,10 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * Append one or more default filters on this object.
      *
      * @param  mixed[] $filters One or more filters to add on this expression.
-     * @return self
      */
-    public function addDefaultFilters(array $filters)
+    public function addDefaultFilters(array $filters): static
     {
-        foreach ($filters as $key => $filter) {
+        foreach ($filters as $filter) {
             $this->addDefaultFilter($filter);
         }
 
@@ -176,9 +172,8 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * Append a default filter on this object.
      *
      * @param  mixed $filter The expression string, structure, object, or callable to be parsed.
-     * @return self
      */
-    public function addDefaultFilter($filter)
+    public function addDefaultFilter($filter): static
     {
         $this->defaultFilters[] = $filter;
         return $this;
@@ -186,10 +181,8 @@ class ScopedCollectionLoader extends ModelCollectionLoader
 
     /**
      * Determine if the object has any default filters.
-     *
-     * @return boolean
      */
-    public function hasDefaultFilters()
+    public function hasDefaultFilters(): bool
     {
         return !empty($this->defaultFilters);
     }
@@ -212,9 +205,8 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * Note: Any existing orders are dropped.
      *
      * @param  mixed[] $orders One or more orders to set on this expression.
-     * @return self
      */
-    protected function setDefaultOrders(array $orders)
+    protected function setDefaultOrders(array $orders): static
     {
         $this->defaultOrders = [];
         $this->addDefaultOrders($orders);
@@ -225,11 +217,10 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * Append one or more default orders on this object.
      *
      * @param  mixed[] $orders One or more orders to add on this expression.
-     * @return self
      */
-    public function addDefaultOrders(array $orders)
+    public function addDefaultOrders(array $orders): static
     {
-        foreach ($orders as $key => $order) {
+        foreach ($orders as $order) {
             $this->addDefaultOrder($order);
         }
 
@@ -240,9 +231,8 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * Append a default order on this object.
      *
      * @param  mixed $order The expression string, structure, object, or callable to be parsed.
-     * @return self
      */
-    public function addDefaultOrder($order)
+    public function addDefaultOrder($order): static
     {
         $this->defaultOrders[] = $order;
         return $this;
@@ -250,10 +240,8 @@ class ScopedCollectionLoader extends ModelCollectionLoader
 
     /**
      * Determine if the object has any default orders.
-     *
-     * @return boolean
      */
-    public function hasDefaultOrders()
+    public function hasDefaultOrders(): bool
     {
         return !empty($this->defaultOrders);
     }
@@ -276,9 +264,8 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * Note: Any existing pagination is dropped.
      *
      * @param  mixed $pagination A page number / number per page value.
-     * @return self
      */
-    protected function setDefaultPagination($pagination)
+    protected function setDefaultPagination($pagination): static
     {
         $this->defaultPagination = $pagination;
         return $this;
@@ -286,10 +273,8 @@ class ScopedCollectionLoader extends ModelCollectionLoader
 
     /**
      * Determine if the object has any default pagination.
-     *
-     * @return boolean
      */
-    public function hasDefaultPagination()
+    public function hasDefaultPagination(): bool
     {
         return !empty($this->defaultPagination);
     }
@@ -300,9 +285,9 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * @overrides CollectionLoader::setFilters()
      *
      * @param  array $filters An array of filters.
-     * @return self
      */
-    public function setFilters(array $filters, $trusted = true)
+    #[\Override]
+    public function setFilters(array $filters, $trusted = true): static
     {
         if ($this->hasDefaultFilters()) {
             $this->addFilters($filters, $trusted);
@@ -319,9 +304,9 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * @overrides CollectionLoader::setOrders()
      *
      * @param  array $orders An array of orders.
-     * @return self
      */
-    public function setOrders(array $orders, $trusted = true)
+    #[\Override]
+    public function setOrders(array $orders, $trusted = true): static
     {
         if ($this->hasDefaultOrders()) {
             $this->addOrders($orders, $trusted);

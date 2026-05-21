@@ -49,10 +49,9 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
 
     /**
      * Reset everything but the model.
-     *
-     * @return self
      */
-    public function reset()
+    #[\Override]
+    public function reset(): static
     {
         parent::reset();
 
@@ -85,9 +84,8 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      *
      * @param  boolean $withFoundRows If TRUE, uses `FOUND_ROWS()` otherwise runs the last query again.
      * @throws LogicException If the last statement can not lookup found rows.
-     * @return integer
      */
-    public function loadFound($withFoundRows = false)
+    public function loadFound($withFoundRows = false): int
     {
         $src = $this->source();
 
@@ -141,11 +139,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $orders  = $source->sqlOrders();
         $limits  = $source->sqlPagination();
 
-        if ($limits && $this->numPerPage() !== 1) {
-            $calcFoundRows = 'SQL_CALC_FOUND_ROWS ';
-        } else {
-            $calcFoundRows = '';
-        }
+        $calcFoundRows = $limits && $this->numPerPage() !== 1 ? 'SQL_CALC_FOUND_ROWS ' : '';
 
         $this->fromQueryBuilder = true;
 
@@ -310,8 +304,8 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
             $sth = $dbh->prepare($query);
             $sth->execute();
         } elseif (is_array($query)) {
-            list($query, $binds, $types) = array_pad($query, 3, []);
-            $query = trim($query);
+            [$query, $binds, $types] = array_pad($query, 3, []);
+            $query = trim((string) $query);
 
             $sth = $source->dbQuery($query, $binds, $types);
         } else {
@@ -319,7 +313,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
                 'The SQL query must be a string or an array: ' .
                 '[ string $query, array $binds, array $dataTypes ]; ' .
                 'received %s',
-                is_object($query) ? get_class($query) : $query
+                is_object($query) ? $query::class : $query
             ));
         }
 
@@ -327,7 +321,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
             $this->fromQueryBuilder = false;
         }
 
-        $wasCalcFoundRows = strpos($query, 'SELECT SQL_CALC_FOUND_ROWS') === 0;
+        $wasCalcFoundRows = str_starts_with($query, 'SELECT SQL_CALC_FOUND_ROWS');
         if ($wasCalcFoundRows) {
             $this->foundObjs = $this->loadFound(true);
             $foundObjs = $this->foundObjs;
@@ -409,10 +403,10 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
             throw new InvalidArgumentException('Model does not have a grouping property');
         }
 
-        if ($direction === '<' || $direction === 'lft' || $direction === 'left') {
+        if (in_array($direction, ['<', 'lft', 'left'], true)) {
             $direction = '<';
             $order     = 'DESC';
-        } elseif ($direction === '>' || $direction === 'rgt' || $direction === 'right') {
+        } elseif (in_array($direction, ['>', 'rgt', 'right'], true)) {
             $direction = '>';
             $order     = 'ASC';
         } else {
@@ -473,7 +467,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $this->addFilters($filters);
 
         $source = $this->source();
-        $model  = $this->model();
+        $this->model();
 
         $selects = $source->sqlSelect();
         $tables  = $source->sqlFrom();
@@ -509,12 +503,14 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      * @param  integer   $foundObjs If provided, then it is filled with the number of found rows.
      * @return ModelInterface[]
      */
+    #[\Override]
     public function load(
         $ident = null,
         ?callable $callback = null,
         ?callable $before = null,
         &$foundObjs = null
-    ) {
+    ): \ArrayAccess|array
+    {
         if ($ident !== null) {
             return $this->loadOne($ident, $before, $callback);
         }
@@ -526,11 +522,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $orders  = $source->sqlOrders();
         $limits  = $source->sqlPagination();
 
-        if ($limits && $this->numPerPage() !== 1) {
-            $calcFoundRows = 'SQL_CALC_FOUND_ROWS ';
-        } else {
-            $calcFoundRows = '';
-        }
+        $calcFoundRows = $limits && $this->numPerPage() !== 1 ? 'SQL_CALC_FOUND_ROWS ' : '';
 
         $this->fromQueryBuilder = true;
 
@@ -680,12 +672,13 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      * @throws InvalidArgumentException If the SQL string/set is invalid.
      * @return ModelInterface[]
      */
+    #[\Override]
     public function loadFromQuery(
         $query,
         ?callable $callback = null,
         ?callable $before = null,
         &$foundObjs = null
-    ) {
+    ): \ArrayAccess|array {
         $source = $this->source();
 
         $dbh = $source->db();
@@ -696,8 +689,8 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
             $sth = $dbh->prepare($query);
             $sth->execute();
         } elseif (is_array($query)) {
-            list($query, $binds, $types) = array_pad($query, 3, []);
-            $query = trim($query);
+            [$query, $binds, $types] = array_pad($query, 3, []);
+            $query = trim((string) $query);
 
             $sth = $source->dbQuery($query, $binds, $types);
         } else {
@@ -705,7 +698,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
                 'The SQL query must be a string or an array: ' .
                 '[ string $query, array $binds, array $dataTypes ]; ' .
                 'received %s',
-                is_object($query) ? get_class($query) : $query
+                is_object($query) ? $query::class : $query
             ));
         }
 
@@ -713,7 +706,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
             $this->fromQueryBuilder = false;
         }
 
-        $wasCalcFoundRows = strpos($query, 'SELECT SQL_CALC_FOUND_ROWS') === 0;
+        $wasCalcFoundRows = str_starts_with($query, 'SELECT SQL_CALC_FOUND_ROWS');
         if ($wasCalcFoundRows) {
             $this->foundObjs = $this->loadFound(true);
             $foundObjs = $this->foundObjs;
@@ -862,16 +855,9 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      */
     protected function areIdsValid(array $ids)
     {
-        if (empty($ids)) {
+        if ($ids === []) {
             return false;
         }
-
-        foreach ($ids as $id) {
-            if (!$this->isIdValid($id)) {
-                return false;
-            }
-        }
-
-        return true;
+        return array_all($ids, fn($id) => $this->isIdValid($id));
     }
 }

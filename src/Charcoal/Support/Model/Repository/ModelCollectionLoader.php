@@ -31,8 +31,6 @@ class ModelCollectionLoader extends CollectionLoaderIterator
 
     /**
      * Clone the collection loader.
-     *
-     * @return void
      */
     public function __clone()
     {
@@ -44,9 +42,8 @@ class ModelCollectionLoader extends CollectionLoaderIterator
      * Clone the collection loader.
      *
      * @param  mixed $data An array of customizations for the clone or an object model.
-     * @return static
      */
-    public function cloneWith($data)
+    public function cloneWith($data): static
     {
         if (!is_array($data)) {
             $data = [
@@ -86,15 +83,15 @@ class ModelCollectionLoader extends CollectionLoaderIterator
      *
      * @param  string|ModelInterface $model An object model.
      * @throws RuntimeException If this method is called a second time.
-     * @return self
      */
-    public function setModel($model)
+    #[\Override]
+    public function setModel($model): static
     {
         if ($this->hasModel() && $this->lockModel) {
             throw new RuntimeException(
                 sprintf(
                     'A model is already assigned to this collection loader: %s',
-                    get_class($this->model())
+                    $this->model()::class
                 )
             );
         }
@@ -109,6 +106,7 @@ class ModelCollectionLoader extends CollectionLoaderIterator
      *
      * @return \Charcoal\Source\SourceInterface
      */
+    #[\Override]
     public function source()
     {
         $this->lockModel = true;
@@ -120,6 +118,7 @@ class ModelCollectionLoader extends CollectionLoaderIterator
      *
      * @return ModelInterface
      */
+    #[\Override]
     public function createModel()
     {
         $model = $this->factory()->create($this->modelClass());
@@ -133,6 +132,7 @@ class ModelCollectionLoader extends CollectionLoaderIterator
      * @param  array $data The model data.
      * @return ModelInterface
      */
+    #[\Override]
     protected function createModelFromData(array $data)
     {
         $model = $this->factory()->create($this->dynamicModelClass($data));
