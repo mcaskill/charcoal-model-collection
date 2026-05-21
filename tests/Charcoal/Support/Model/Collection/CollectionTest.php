@@ -21,9 +21,8 @@ use Charcoal\Tests\AbstractTestCase;
 
 /**
  * Test the enhanced model collection class.
- *
- * @coversDefaultClass Charcoal\Support\Model\Collection\Collection
  */
+#[\PHPUnit\Framework\Attributes\CoversClass(Charcoal\Support\Model\Collection\Collection::class)]
 class CollectionTest extends AbstractTestCase
 {
     const OBJ_1 = '40ea';
@@ -42,7 +41,7 @@ class CollectionTest extends AbstractTestCase
      */
     protected $map;
 
-    public function setUp()
+    public function setUp(): void
     {
         $proto = new Model([
             'logger'   => new NullLogger(),
@@ -99,7 +98,7 @@ class CollectionTest extends AbstractTestCase
     // Test \Charcoal\Support\Model\Collection
     // =============================================================================================
 
-    public function testEmptyCollection()
+    public function testEmptyCollection(): void
     {
         $c = new Collection;
 
@@ -107,32 +106,30 @@ class CollectionTest extends AbstractTestCase
         $this->assertEquals(null, $c->pop());
     }
 
-    public function testPopLastItemInCollection()
+    public function testPopLastItemInCollection(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
 
         $this->assertEquals($o5, $c->pop());
         $this->assertEquals($o4, $c->last());
     }
 
-    public function testShiftFirstItemInCollection()
+    public function testShiftFirstItemInCollection(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
 
         $this->assertEquals($o1, $c->shift());
         $this->assertEquals($o2, $c->first());
     }
 
-    public function testSortByCallback()
+    public function testSortByCallback(): void
     {
         $arr = $this->arr;
         shuffle($arr);
 
-        $byKey = function ($obj, $key) {
-            return $key;
-        };
+        $byKey = (fn($obj, $key) => $key);
 
         $c = new Collection($arr);
         $c->sortBy($byKey);
@@ -146,7 +143,7 @@ class CollectionTest extends AbstractTestCase
         $this->assertEquals($map, $c->all());
     }
 
-    public function testSortByString()
+    public function testSortByString(): void
     {
         $arr = $this->arr;
         shuffle($arr);
@@ -157,7 +154,7 @@ class CollectionTest extends AbstractTestCase
         $this->assertEquals($this->map, $c->all());
     }
 
-    public function testSortByThrowsAnException()
+    public function testSortByThrowsAnException(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -168,7 +165,7 @@ class CollectionTest extends AbstractTestCase
         $c->sortBy(42);
     }
 
-    public function testReverse()
+    public function testReverse(): void
     {
         $arr = $this->arr;
         $map = array_reverse($this->map, true);
@@ -179,31 +176,27 @@ class CollectionTest extends AbstractTestCase
         $this->assertSame($map, $c->all());
     }
 
-    public function testFilter()
+    public function testFilter(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
 
-        $filtered = $c->filter(function ($obj) {
-            return $obj['id'] === self::OBJ_2;
-        });
+        $filtered = $c->filter(fn($obj): bool => $obj['id'] === self::OBJ_2);
         $this->assertEquals(
             [ self::OBJ_2 => $o2 ],
             $filtered->all()
         );
 
-        $filtered = $c->filter(function ($obj, $key) {
-            return strpos($key, 'e') !== false;
-        });
+        $filtered = $c->filter(fn($obj, $key): bool => str_contains((string) $key, 'e'));
         $this->assertEquals(
             [ self::OBJ_1 => $o1, self::OBJ_4 => $o4, self::OBJ_5 => $o5 ],
             $filtered->all()
         );
     }
 
-    public function testWhere()
+    public function testWhere(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
 
         $this->assertEquals(
@@ -258,9 +251,9 @@ class CollectionTest extends AbstractTestCase
         );
     }
 
-    public function testWhereIn()
+    public function testWhereIn(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
 
         $filtered = $c->whereIn('position', [ 1, 3 ])->all();
@@ -276,25 +269,25 @@ class CollectionTest extends AbstractTestCase
         );
     }
 
-    public function testTakeFirst()
+    public function testTakeFirst(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
 
         $first = $c->take(2);
         $this->assertEquals([ self::OBJ_1 => $o1, self::OBJ_2 => $o2 ], $first->all());
     }
 
-    public function testTakeLast()
+    public function testTakeLast(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
 
         $last = $c->take(-2);
         $this->assertEquals([ self::OBJ_4 => $o4, self::OBJ_5 => $o5 ], $last->all());
     }
 
-    public function testRandom()
+    public function testRandom(): void
     {
         $c = new Collection($this->arr);
 
@@ -308,16 +301,16 @@ class CollectionTest extends AbstractTestCase
         $this->assertCount(3, $random);
     }
 
-    public function testRandomOnEmptyCollection()
+    public function testRandomOnEmptyCollection(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
         (new Collection)->random();
     }
 
-    public function testPaginate()
+    public function testPaginate(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
 
         $this->assertEquals(
@@ -331,9 +324,9 @@ class CollectionTest extends AbstractTestCase
         $this->assertEquals([], $c->forPage(3, 3)->all());
     }
 
-    public function testPrependAcceptableData()
+    public function testPrependAcceptableData(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $map = $this->map;
         array_pop($map);
 
@@ -342,7 +335,7 @@ class CollectionTest extends AbstractTestCase
         $this->assertEquals($expected, $c->prepend($o5)->all());
     }
 
-    public function testPrependUnacceptableData()
+    public function testPrependUnacceptableData(): void
     {
         $this->expectException(InvalidArgumentException::class);
 
@@ -350,9 +343,9 @@ class CollectionTest extends AbstractTestCase
         $c->prepend('foo');
     }
 
-    public function testOnly()
+    public function testOnly(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
 
         $this->assertEquals(
@@ -373,45 +366,45 @@ class CollectionTest extends AbstractTestCase
         );
     }
 
-    public function testSliceOffset()
+    public function testSliceOffset(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
         $this->assertEquals([ $o3, $o4, $o5 ], $c->slice(2)->values());
     }
 
-    public function testSliceNegativeOffset()
+    public function testSliceNegativeOffset(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
         $this->assertEquals([ $o3, $o4, $o5 ], $c->slice(-3)->values());
     }
 
-    public function testSliceOffsetAndLength()
+    public function testSliceOffsetAndLength(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
         $this->assertEquals([ $o3, $o4 ], $c->slice(2, 2)->values());
     }
 
-    public function testSliceOffsetAndNegativeLength()
+    public function testSliceOffsetAndNegativeLength(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
 
         $this->assertEquals([ $o3, $o4 ], $c->slice(2, -1)->values());
     }
 
-    public function testSliceNegativeOffsetAndLength()
+    public function testSliceNegativeOffsetAndLength(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
         $this->assertEquals([ $o2, $o3, $o4 ], $c->slice(-4, 3)->values());
     }
 
-    public function testSliceNegativeOffsetAndNegativeLength()
+    public function testSliceNegativeOffsetAndNegativeLength(): void
     {
-        list($o1, $o2, $o3, $o4, $o5) = $this->arr;
+        [$o1, $o2, $o3, $o4, $o5] = $this->arr;
         $c = new Collection($this->arr);
         $this->assertEquals([ $o2, $o3, $o4 ], $c->slice(-4, -1)->values());
     }
