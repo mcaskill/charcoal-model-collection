@@ -112,10 +112,10 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
     /**
      * Find models by the loader's current query and return a generator.
      *
-     * @param  string|null   $ident     Optional. A pre-defined list to use from the model.
-     * @param  callable|null $after     Process each entity after applying raw data.
-     * @param  callable|null $before    Process each entity before applying raw data.
-     * @param  integer       $foundObjs If provided, then it is filled with the number of found rows.
+     * @param  ?string   $ident     Optional. A pre-defined list to use from the model.
+     * @param  ?callable $after     Process each entity after applying raw data.
+     * @param  ?callable $before    Process each entity before applying raw data.
+     * @param  integer   $foundObjs If provided, then it is filled with the number of found rows.
      * @return ModelInterface[]|\Generator
      */
     public function cursor(
@@ -152,9 +152,9 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
     /**
      * Find a model by its primary key and return a generator.
      *
-     * @param  mixed    $id     The model identifier.
-     * @param  callable $before Process each entity before applying raw data.
-     * @param  callable $after  Process each entity after applying raw data.
+     * @param  int|string $id     The model identifier.
+     * @param  ?callable  $before Process each entity before applying raw data.
+     * @param  ?callable  $after  Process each entity after applying raw data.
      * @throws InvalidArgumentException If the $id does not resolve to a queryable statement.
      * @return ModelInterface|\Generator
      */
@@ -208,9 +208,9 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
     /**
      * Find multiple models by their primary keys and return a generator.
      *
-     * @param  array    $ids    One or many model identifiers.
-     * @param  callable $before Process each entity before applying raw data.
-     * @param  callable $after  Process each entity after applying raw data.
+     * @param  (int|string)[] $ids    One or many model identifiers.
+     * @param  ?callable      $before Process each entity before applying raw data.
+     * @param  ?callable      $after  Process each entity after applying raw data.
      * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
      * @return ModelInterface[]|\Generator
      */
@@ -502,10 +502,10 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
      *     This method adds support for `SQL_CALC_FOUND_ROWS`
      *     and repurposes the first parameter.
      *
-     * @param  mixed    $ident     The model identifier.
-     * @param  callable $callback  Process each entity after applying raw data.
-     * @param  callable $before    Process each entity before applying raw data.
-     * @param  integer  $foundObjs If provided, then it is filled with the number of found rows.
+     * @param  ?string   $ident     The model identifier.
+     * @param  ?callable $callback  Process each entity after applying raw data.
+     * @param  ?callable $before    Process each entity before applying raw data.
+     * @param  integer   $foundObjs If provided, then it is filled with the number of found rows.
      * @return ModelInterface[]
      */
     public function load(
@@ -542,9 +542,9 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
     /**
      * Find a model by its primary key.
      *
-     * @param  mixed    $id     The model identifier.
-     * @param  callable $before Process each entity before applying raw data.
-     * @param  callable $after  Process each entity after applying raw data.
+     * @param  int|string $id     The model identifier.
+     * @param  ?callable  $before Process each entity before applying raw data.
+     * @param  ?callable  $after  Process each entity after applying raw data.
      * @throws InvalidArgumentException If the $id does not resolve to a queryable statement.
      * @return ModelInterface|null
      */
@@ -598,9 +598,9 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
     /**
      * Find multiple models by their primary keys.
      *
-     * @param  array    $ids    One or many model identifiers.
-     * @param  callable $before Process each entity before applying raw data.
-     * @param  callable $after  Process each entity after applying raw data.
+     * @param  (int|string)[] $ids    One or many model identifiers.
+     * @param  ?callable      $before Process each entity before applying raw data.
+     * @param  ?callable      $after  Process each entity after applying raw data.
      * @throws InvalidArgumentException If the $ids do not resolve to a queryable statement.
      * @return ModelInterface[]
      */
@@ -815,7 +815,10 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
     /**
      * Determine whether a variable is a valid ID (number or string).
      *
+     * @param  mixed $id
      * @return boolean
+     *
+     * @phpstan-assert int|string $id
      */
     protected function isIdValid($id)
     {
@@ -833,7 +836,10 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
     /**
      * Determine whether a list contains valid IDs (numbers or strings).
      *
+     * @param  mixed[] $ids
      * @return boolean
+     *
+     * @phpstan-assert (int|string)[] $ids
      */
     protected function areIdsValid(array $ids)
     {
