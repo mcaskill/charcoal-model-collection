@@ -827,7 +827,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         }
 
         if (is_string($id)) {
-            return isset($id[0]);
+            return preg_match('/^[\w\-]+$/i', $id);
         }
 
         return false;
