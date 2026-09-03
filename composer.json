@@ -24,9 +24,8 @@
         }
     },
     "require": {
-        "php": ">7.1",
-        "locomotivemtl/charcoal-cache": "~0.2",
-        "locomotivemtl/charcoal-core": "~0.6"
+        "php": "^7.4 || ^8.0",
+        "charcoal/charcoal": "^5.2"
     },
     "require-dev": {
         "php-coveralls/php-coveralls": "^2.2",

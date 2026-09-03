@@ -101,9 +101,15 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
 
         $this->logger->debug($sql);
 
-        $dbh = $src->db();
-        $sth = $dbh->prepare($sql);
-        $sth->execute();
+        $binds = [];
+        if ($withFoundRows === false && $this->fromQueryBuilder && method_exists($src, 'filterBinds')) {
+            $binds = method_exists($src, 'queryBinds') ? $src->queryBinds() : $src->filterBinds();
+        }
+
+        $sth = $src->dbQuery($sql, $binds);
+        if ($sth === false) {
+            return 0;
+        }
 
         $count = (int)$sth->fetchColumn(0);
         return $count;
@@ -144,7 +150,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $this->fromQueryBuilder = true;
 
         $sql = 'SELECT ' . $calcFoundRows . $selects . ' FROM ' . $tables . $filters . $orders . $limits;
-        $results = $this->cursorFromQuery($sql, $after, $before, $foundObjs);
+        $results = $this->cursorFromQuery($this->queryWithFilterBinds($sql), $after, $before, $foundObjs);
 
         return $results;
     }
@@ -188,19 +194,18 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
 
         $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . $orders . ' LIMIT 1';
 
-        $this->logger->debug($sql);
-        $dbh = $source->db();
-        $sth = $dbh->prepare($sql);
-        $sth->execute();
+        list($query, $binds, $types) = array_pad($this->queryWithFilterBinds($sql), 3, []);
+        $sth = $source->dbQuery($query, $binds, $types);
+        if ($sth === false) {
+            return;
+        }
 
-        if ($sth->execute() !== false) {
-            $objData = $sth->fetch(PDO::FETCH_ASSOC);
-            if ($objData) {
-                $obj = $this->processModel($objData, $before, $after);
+        $objData = $sth->fetch(PDO::FETCH_ASSOC);
+        if ($objData) {
+            $obj = $this->processModel($objData, $before, $after);
 
-                if ($obj instanceof ModelInterface) {
-                    yield $obj;
-                }
+            if ($obj instanceof ModelInterface) {
+                yield $obj;
             }
         }
     }
@@ -249,7 +254,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $this->fromQueryBuilder = true;
 
         $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . $orders . ' LIMIT ' . count($ids);
-        $results = $this->cursorFromQuery($sql, $after, $before);
+        $results = $this->cursorFromQuery($this->queryWithFilterBinds($sql), $after, $before);
 
         return $results;
     }
@@ -272,7 +277,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $this->fromQueryBuilder = true;
 
         $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . $orders;
-        $results = $this->cursorFromQuery($sql, $after, $before);
+        $results = $this->cursorFromQuery($this->queryWithFilterBinds($sql), $after, $before);
 
         return $results;
     }
@@ -299,7 +304,6 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
 
         $dbh = $source->db();
 
-        /** @todo Filter binds */
         if (is_string($query)) {
             $query = trim($query);
             $this->logger->debug($query);
@@ -478,12 +482,9 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
 
         $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . $orders . ' LIMIT 1';
 
-        $this->logger->debug($sql);
-        $dbh = $source->db();
-        $sth = $dbh->prepare($sql);
-        $sth->execute();
-
-        if ($sth->execute() === false) {
+        list($query, $binds, $types) = array_pad($this->queryWithFilterBinds($sql), 3, []);
+        $sth = $source->dbQuery($query, $binds, $types);
+        if ($sth === false) {
             return null;
         }
 
@@ -534,7 +535,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $this->fromQueryBuilder = true;
 
         $sql = 'SELECT ' . $calcFoundRows . $selects . ' FROM ' . $tables . $filters . $orders . $limits;
-        $results = $this->loadFromQuery($sql, $callback, $before, $foundObjs);
+        $results = $this->loadFromQuery($this->queryWithFilterBinds($sql), $callback, $before, $foundObjs);
 
         return $results;
     }
@@ -578,12 +579,9 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
 
         $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . $orders . ' LIMIT 1';
 
-        $this->logger->debug($sql);
-        $dbh = $source->db();
-        $sth = $dbh->prepare($sql);
-        $sth->execute();
-
-        if ($sth->execute() === false) {
+        list($query, $binds, $types) = array_pad($this->queryWithFilterBinds($sql), 3, []);
+        $sth = $source->dbQuery($query, $binds, $types);
+        if ($sth === false) {
             return null;
         }
 
@@ -639,7 +637,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $this->fromQueryBuilder = true;
 
         $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . $orders . ' LIMIT ' . count($ids);
-        $results = $this->loadFromQuery($sql, $after, $before);
+        $results = $this->loadFromQuery($this->queryWithFilterBinds($sql), $after, $before);
 
         return $results;
     }
@@ -662,7 +660,7 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         $this->fromQueryBuilder = true;
 
         $sql = 'SELECT ' . $selects . ' FROM ' . $tables . $filters . $orders;
-        $results = $this->loadFromQuery($sql, $after, $before);
+        $results = $this->loadFromQuery($this->queryWithFilterBinds($sql), $after, $before);
 
         return $results;
     }
@@ -692,7 +690,6 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
 
         $dbh = $source->db();
 
-        /** @todo Filter binds */
         if (is_string($query)) {
             $query = trim($query);
             $this->logger->debug($query);
@@ -810,6 +807,28 @@ class CollectionLoaderIterator extends BaseCollectionLoader implements IteratorA
         }
 
         $this->querySnapshot = null;
+    }
+
+    /**
+     * Pair a compiled SQL string with binds from the last filter/order compilation.
+     *
+     * Prefers {@see \Charcoal\Source\DatabaseSource::queryBinds()} when available.
+     *
+     * @param  string $sql The SQL statement that includes filter/order placeholders.
+     * @return array
+     */
+    protected function queryWithFilterBinds($sql)
+    {
+        $source = $this->source();
+        if (method_exists($source, 'queryBinds')) {
+            $binds = $source->queryBinds();
+        } elseif (method_exists($source, 'filterBinds')) {
+            $binds = $source->filterBinds();
+        } else {
+            $binds = [];
+        }
+
+        return [ $sql, $binds, [] ];
     }
 
     /**
