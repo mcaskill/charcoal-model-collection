@@ -302,12 +302,12 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * @param  array $filters An array of filters.
      * @return self
      */
-    public function setFilters(array $filters)
+    public function setFilters(array $filters, $trusted = true)
     {
         if ($this->hasDefaultFilters()) {
-            $this->addFilters($filters);
+            $this->addFilters($filters, $trusted);
         } else {
-            parent::setFilters($filters);
+            parent::setFilters($filters, $trusted);
         }
 
         return $this;
@@ -321,12 +321,12 @@ class ScopedCollectionLoader extends ModelCollectionLoader
      * @param  array $orders An array of orders.
      * @return self
      */
-    public function setOrders(array $orders)
+    public function setOrders(array $orders, $trusted = true)
     {
         if ($this->hasDefaultOrders()) {
-            $this->addOrders($orders);
+            $this->addOrders($orders, $trusted);
         } else {
-            parent::setOrders($orders);
+            parent::setOrders($orders, $trusted);
         }
 
         return $this;
