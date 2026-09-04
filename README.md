@@ -5,7 +5,7 @@ Charcoal Model Collections / Repositories
 [![Latest Stable Version][badge-version]][charcoal-model-collection]
 [![Build Status][badge-travis]][dev-travis]
 
-Support package providing advanced model collections and collection loaders for [Charcoal][charcoal-core] projects.
+Support package providing advanced model collections and collection loaders for [Charcoal][charcoal] projects.
 
 
 
@@ -493,12 +493,13 @@ $posts = $repository->withoutCache()->cursor();
 
 
 
+[charcoal]:                     https://packagist.org/packages/charcoal/charcoal
 [charcoal-model-collection]:    https://packagist.org/packages/mcaskill/charcoal-model-collection
-[charcoal-cache]:               https://packagist.org/packages/locomotivemtl/charcoal-cache
-[charcoal-core]:                https://packagist.org/packages/locomotivemtl/charcoal-core
-[charcoal-model-loader]:        https://github.com/locomotivemtl/charcoal-core/blob/master/src/Charcoal/Model/Service/ModelLoader.php
-[charcoal-source-interface]:    https://github.com/locomotivemtl/charcoal-core/blob/master/src/Charcoal/Source/SourceInterface.php
-[license-charcoal]:             https://github.com/locomotivemtl/charcoal-core/blob/master/LICENSE
+[charcoal-cache]:               https://packagist.org/packages/charcoal/cache
+[charcoal-core]:                https://packagist.org/packages/charcoal/core
+[charcoal-model-loader]:        https://github.com/charcoalphp/charcoal/blob/main/packages/core/src/Charcoal/Model/Service/ModelLoader.php
+[charcoal-source-interface]:    https://github.com/charcoalphp/charcoal/blob/main/packages/core/src/Charcoal/Source/SourceInterface.php
+[license-charcoal]:             https://github.com/charcoalphp/charcoal/blob/main/LICENSE
 [mysql-function-found-rows]:    https://dev.mysql.com/doc/refman/5.7/en/information-functions.html#function_found-rows
 [php-syntax-generators]:        https://www.php.net/manual/en/language.generators.overview.php
 [php-class-generator]:          https://php.net/class.Generator
